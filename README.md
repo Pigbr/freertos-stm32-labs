@@ -2,14 +2,14 @@
 
 5 個漸進式 lab,從基本 task + queue 入門,中間 **深入 FreeRTOS kernel 內部結構**(直接走 TCB linked list、改 heap memory management),最後做出 **完整音樂播放器**(RTOS + FATFS + SD card + I²S DAC + UART log + 按鍵狀態機)。所有 lab 跑在 **STM32F407VG Discovery Board**,用 STM32CubeIDE + STM32CubeMX 產生底層 HAL。
 
-> 📚 Course: NCKU 嵌入式作業系統分析與實作 (114-2)
-> 🛠 Platform: STM32F407VG (Cortex-M4F)
-> 🧰 RTOS: FreeRTOS(包含 kernel 內部修改)
-> 🏗 IDE: STM32CubeIDE / STM32CubeMX
+- Course: 嵌入式作業系統分析與實作 (114-2)
+- Platform: STM32F407VG (Cortex-M4F)
+- RTOS: FreeRTOS(包含 kernel 內部修改)
+- IDE: STM32CubeIDE / STM32CubeMX
 
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 
 - **C** for STM32 bare-metal + RTOS programming
 - **FreeRTOS APIs**: `xTaskCreate`, `xQueueSend/Receive`, `xSemaphoreCreateBinary`, `xSemaphoreGiveFromISR`, mutex, `vTaskDelay`, `vTaskSuspend / Resume`
@@ -21,9 +21,10 @@
 
 ---
 
-## 📂 Labs
+## Labs
 
 ### Lab 1 — Task + Queue + ISR Button(基本通訊與 Task State)
+
 兩個 task:**LED task**(實作兩種閃爍模式)、**Button task**(分辨長短按)。
 
 - **短按** → 透過 queue 通知 LED task 切換閃爍模式
@@ -32,9 +33,10 @@
 **遇到的問題**:按了按鈕卻要等紅橘綠燈閃完才會切換 → 用 `goto` 跳出 LED loop、立刻處理切換。
 **設計細節**:用一個變數記住當前閃到哪顆燈,切換後不從頭開始。
 
-→ 練到:**queue 跨 task 通訊、Button Debounce(中斷觸發後 task 內二次確認)、Task state 管理**
+練到:**queue 跨 task 通訊、Button Debounce(中斷觸發後 task 內二次確認)、Task state 管理**
 
-### Lab 2 — Walking the FreeRTOS Kernel(走 TCB linked list)⭐
+### Lab 2 — Walking the FreeRTOS Kernel(走 TCB linked list)
+
 **直接讀 FreeRTOS 內部 list 結構**,用 UART 印出系統內 5 個 task 的 TCB 資訊:`pcTaskName`、`uxBasePriority`、`uxPriority`、`pxStack`、`pxTopOfStack`、`state`。
 
 **走訪範圍**:
@@ -44,9 +46,10 @@
 
 **踩到的坑**:list item 的 `pvOwner` 是 `void *`,一開始不知道要 cast 成什麼。查資料後發現要 cast 成 `TCB_t *` 才能解出每個欄位。
 
-→ 這次 lab 直接看到 **FreeRTOS scheduler 的資料結構**,理解了「為什麼 priority 越高的 task 找得越快」(因為 array index 直接對應)
+這次 lab 直接看到 **FreeRTOS scheduler 的資料結構**,理解了「為什麼 priority 越高的 task 找得越快」(因為 array index 直接對應)
 
 ### Lab 3 — ST MEMS LIS3DSH + Binary Semaphore
+
 **Sensor 配置 + ISR → task 解耦**:
 
 1. 配置 **LIS3DSH 三軸加速度計**(透過 SPI),設定 free-fall / shake 偵測閥值
@@ -56,9 +59,10 @@
 
 **踩到的坑**:照 slide 配置完中斷一直停在高電位 → 查資料發現少配置一個 register(`outs_REG` 讀完才會清中斷源)。
 
-→ 練到:**Binary semaphore 解耦 ISR ↔ task、`...FromISR` API 配 yield、SPI sensor 配置**
+練到:**Binary semaphore 解耦 ISR ↔ task、`...FromISR` API 配 yield、SPI sensor 配置**
 
-### Lab 4 — Modify `heap_2.c` Memory Management ⭐
+### Lab 4 — Modify `heap_2.c` Memory Management
+
 **改 FreeRTOS kernel 的 heap allocator**:
 
 1. **Print block info**:每次呼叫 `pvPortMalloc` 把回傳 block 的詳細內容印出來(地址 / 大小 / 對齊狀況)
@@ -67,9 +71,10 @@
 
 **踩到的坑**:直接拿實驗給的 `heap_2.c` 整檔覆蓋 → 編譯過但 STM32 reset 後卡死。後來才知道 **FreeRTOS 版本不同會掛**,要對照範本手動 patch 自己版本的檔案。
 
-→ 練到:**動態記憶體配置內部運作、fragmentation 與 coalescing、版本管理意識**
+練到:**動態記憶體配置內部運作、fragmentation 與 coalescing、版本管理意識**
 
-### Lab 5 — RTOS Audio Player ⭐⭐
+### Lab 5 — RTOS Audio Player
+
 **整合性最強的 lab**,做出一台 SD 卡音樂播放器。底層 audio driver 是既有 library,我實作:
 
 | 我做的部分 | 內容 |
@@ -93,7 +98,7 @@
 
 ---
 
-## 🗂 Repo Layout
+## Repo Layout
 
 每個 lab 都是獨立的 STM32CubeIDE project:
 
@@ -113,7 +118,7 @@ labN/
 
 ---
 
-## 🛠 How to Build & Flash
+## How to Build & Flash
 
 1. 用 **STM32CubeIDE** 開啟 `labN/project/` 資料夾
 2. `Project → Build All`
@@ -124,7 +129,7 @@ labN/
 
 ---
 
-## 💡 What I Learned
+## What I Learned
 
 - FreeRTOS 多種 IPC 機制(Queue / Semaphore / Mutex / Task Notification)的取捨
 - ISR-to-Task 的正確 pattern(`...FromISR` API + `portYIELD_FROM_ISR`)
